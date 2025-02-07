@@ -1,7 +1,11 @@
 {
-  "name": "template-2",
+  "name": "food-calorie-analyzer",
   "version": "0.1.0",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shiv1827/Food-Calorie-Analyzer.git"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
