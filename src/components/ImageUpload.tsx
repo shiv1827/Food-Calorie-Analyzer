@@ -1,76 +1,103 @@
-import React, { useState, useRef } from "react";
-import { Image as ImageIcon, X } from "lucide-react";
-import Image from "next/image";
+'use client';
+
+import { useState, useRef } from 'react';
+import Image from 'next/image';
 
 interface ImageUploadProps {
-  onImageChange: (file: File | null) => void;
+  onImageCapture: (file: File) => void;
 }
 
-export default function ImageUpload({ onImageChange }: ImageUploadProps) {
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+export default function ImageUpload({ onImageCapture }: ImageUploadProps) {
+  const [preview, setPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      onImageChange(file);
+      onImageCapture(file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result as string);
+        setPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const removeImage = () => {
-    onImageChange(null);
-    setImagePreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+  const handleCameraCapture = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      setIsCapturing(true);
+      // Additional camera handling logic will be added here
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      alert('Unable to access camera. Please make sure you have granted camera permissions.');
     }
   };
 
   return (
-    <div className="flex items-center justify-center w-full">
-      {imagePreview ? (
+    <div className="w-full max-w-md mx-auto">
+      {preview ? (
         <div className="relative w-full h-64">
           <Image
-            src={imagePreview}
-            alt="Preview"
-            layout="fill"
-            objectFit="cover"
-            className="rounded-lg"
+            src={preview}
+            alt="Food preview"
+            fill
+            className="object-cover rounded-lg"
           />
           <button
-            type="button"
-            onClick={removeImage}
-            className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full"
+            onClick={() => {
+              setPreview(null);
+              if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+              }
+            }}
+            className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600"
           >
-            <X size={20} />
+            ✕
           </button>
         </div>
       ) : (
-        <label
-          htmlFor="image"
-          className="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100"
-        >
-          <div className="flex flex-col items-center justify-center pt-5 pb-6">
-            <ImageIcon className="w-10 h-10 mb-3 text-gray-400" />
-            <p className="mb-2 text-sm text-gray-500">
-              <span className="font-semibold">Click to upload</span> or drag and drop
-            </p>
-            <p className="text-xs text-gray-500">PNG, JPG or GIF (MAX. 800x400px)</p>
+        <div className="space-y-4">
+          <div
+            className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors cursor-pointer"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <div className="mx-auto w-12 h-12 mb-4">
+              <svg
+                className="w-full h-full text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+            </div>
+            <p className="text-gray-600">Click to upload or drag and drop</p>
+            <p className="text-sm text-gray-500">PNG, JPG up to 10MB</p>
           </div>
-        </label>
+
+          <button
+            onClick={handleCameraCapture}
+            className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Take Photo
+          </button>
+
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileSelect}
+            accept="image/*"
+            className="hidden"
+          />
+        </div>
       )}
-      <input
-        type="file"
-        id="image"
-        accept="image/*"
-        onChange={handleImageChange}
-        className="hidden"
-        ref={fileInputRef}
-      />
     </div>
   );
 }
